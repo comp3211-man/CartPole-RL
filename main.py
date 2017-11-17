@@ -129,6 +129,7 @@ if __name__ == '__main__':
     done = False
 
     solved = 0
+    solved_consecutive = 0
 
     for i in range(episodes):
         total_reward = 0
@@ -153,9 +154,14 @@ if __name__ == '__main__':
             if done:
                 print 'Episode {}: {}'.format(i+1, total_reward)
 
-                if total_reward >= 195:
-                    solved += 1
+                solved = solved + 1 if total_reward >= 195 else solved
+                solved_consecutive = solved_consecutive + 1 if total_reward >= 195 else 0
 
                 break
 
-    print 'Solved {} times'.format(solved)
+        if solved_consecutive >= 100:
+            break
+
+    print 'Solved {} times, {} times consecutively'.format(solved, solved_consecutive)
+    if solved_consecutive >= 100:
+        print 'Problem solved'
