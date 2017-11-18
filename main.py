@@ -34,7 +34,7 @@ class SimpleQLearningAgent():
         self.observation_space.low[3] = math.radians(parameters.theta_dot_min)
         self.observation_space.high[3] = math.radians(parameters.theta_dot_max)
 
-        self.observation_bins = tuple([np.linspace(observation_space.low[i], observation_space.high[i], size-1) for i, size in enumerate(observation_bin_sizes)])
+        self.observation_bins = tuple([np.linspace(observation_space.low[i] + ((observation_space.high[i] - observation_space.low[i]) / size), observation_space.high[i], size-1, endpoint=False) for i, size in enumerate(observation_bin_sizes)])
 
         self.q_value_table = np.zeros(observation_bin_sizes + (2, ))
 
