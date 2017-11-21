@@ -62,32 +62,26 @@ class SimpleQLearningAgent():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Q-learning agent for CartPole problem of OpenAI Gym')
 
-    parser.add_argument('--learning-rate-max', default=0.5, type=float)
-    parser.add_argument('--learning-rate-min', default=0.1, type=float)
-    parser.add_argument('--learning-rate-decrease-rate', default=20.0, type=float)
+    parser.add_argument('--learning-rate-max', default=0.5, type=float, help='maximum learning rate, 0 <= learning_rate_max <= 1')
+    parser.add_argument('--learning-rate-min', default=0.1, type=float, help='minimum learning rate, 0 <= learning_rate_min <= 1')
+    parser.add_argument('--learning-rate-decrease-rate', default=20.0, type=float, help='learning rate decrease rate, learning_rate_decrease_rate > 0, higher decrease rate means slower decreasing learning rate function')
+    parser.add_argument('--discount', default=1.0, type=float, help='discount, 0 <= discount <= 1')
+    parser.add_argument('--exploration-rate-max', default=1.0, type=float, help='maximum exploration rate, 0 <= exploration_rate_max <= 1')
+    parser.add_argument('--exploration-rate-min', default=0.01, type=float, help='minimum exploration rate, 0 <= exploration_rate_min <= 1')
+    parser.add_argument('--exploration-rate-decrease-rate', default=20.0, type=float, help='exploration rate decrease rate, exploration_rate_decrease_rate > 0, higher decrease rate means slower decreasing exploration rate function')
+    parser.add_argument('--x-bins', default=2, type=int, help='number of bins for cart position')
+    parser.add_argument('--x-dot-bins', default=2, type=int, help='number of bins for cart velocity')
+    parser.add_argument('--theta-bins', default=8, type=int, help='number of bins for pole angle')
+    parser.add_argument('--theta-dot-bins', default=4, type=int, help='number of bins for pole angular velocity')
+    parser.add_argument('--x-dot-min', default=-0.8, type=float, help='minimum of cart velocity domain')
+    parser.add_argument('--x-dot-max', default=0.8, type=float, help='maximum of cart velocity domain')
+    parser.add_argument('--theta-dot-min', default=-40, type=float, help='minimum of pole angular velocity domain')
+    parser.add_argument('--theta-dot-max', default=40, type=float, help='maximum of pole angular velocity domain')
+    parser.add_argument('--episodes', default=1800, type=int, help='number of episodes')
+    parser.add_argument('--ui', default=0, type=int, help='render the UI starting from the uith episode')
 
-    parser.add_argument('--discount', default=1.0, type=float)
-
-    parser.add_argument('--exploration-rate-max', default=1.0, type=float)
-    parser.add_argument('--exploration-rate-min', default=0.01, type=float)
-    parser.add_argument('--exploration-rate-decrease-rate', default=20.0, type=float)
-
-    parser.add_argument('--x-bins', default=2, type=int)
-    parser.add_argument('--x-dot-bins', default=2, type=int)
-    parser.add_argument('--theta-bins', default=8, type=int)
-    parser.add_argument('--theta-dot-bins', default=4, type=int)
-
-    parser.add_argument('--x-dot-min', default=-0.8, type=float)
-    parser.add_argument('--x-dot-max', default=0.8, type=float)
-    parser.add_argument('--theta-dot-min', default=-40, type=float)
-    parser.add_argument('--theta-dot-max', default=40, type=float)
-
-    parser.add_argument('--episodes', default=1800, type=int)
-
-    parser.add_argument('--ui', action='store_true')
-
-    parser.add_argument('--random-agent', action='store_true')
-    parser.add_argument('--random-agent-episodes', default=10, type=int)
+    parser.add_argument('--random-agent', action='store_true', help='use the random agent')
+    parser.add_argument('--random-agent-episodes', default=10, type=int, help='number of episodes for the random agent')
 
     args = parser.parse_args()
 
@@ -104,14 +98,14 @@ if __name__ == '__main__':
             total_reward = 0
 
             observation = env.reset()
-            if args.ui:
+            if args.ui > 0 and i >= args.ui - 1:
                 env.render()
 
             while True:
                 action = randomAgent.act(observation, total_reward, done)
 
                 observation, reward, done, _ = env.step(action)
-                if args.ui:
+                if args.ui > 0 and i >= args.ui - 1:
                     env.render()
 
                 total_reward += reward
@@ -135,14 +129,14 @@ if __name__ == '__main__':
         total_reward = 0
 
         old_observation = env.reset()
-        if args.ui:
+        if args.ui > 0 and i >= args.ui - 1:
             env.render()
 
         while True:
             action = simpleQLearningAgent.act(old_observation, i)
 
             new_observation, reward, done, _ = env.step(action)
-            if args.ui:
+            if args.ui > 0 and i >= args.ui - 1:
                 env.render()
 
             simpleQLearningAgent.train(old_observation, action, new_observation, reward, done, i)
