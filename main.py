@@ -146,22 +146,21 @@ if __name__ == '__main__':
                 break
 
         if solved_consecutive >= 100:
-            break
-
-        if (args.output_print):
-            print("Solved: {}({})".format(solved, solved_max_consecutive))
-            if solved_consecutive >= 100:
-                print('Problem solved')
+                break
+    if (args.output_print):
+        print("Solved: {}({})".format(solved, solved_max_consecutive))
+        if solved_consecutive >= 100:
+            print('Problem solved')
+    else:
+        if solved_consecutive >= 100:
+            file = open("sucess.txt", 'a')
+            output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
+            print(output)
+            file.write(output)
+            file.close()
         else:
-            if solved_consecutive >= 100:
-                file = open("sucess.txt", 'a')
-                output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
-                print(output)
-                file.write(output)
-                file.close()
-            else:
-                file = open("fail.txt", 'a')
-                output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
-                print(output)
-                file.write(output)
-                file.close()
+            file = open("fail.txt", 'a')
+            output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
+            print(output)
+            file.write(output)
+            file.close()
