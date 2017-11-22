@@ -3,7 +3,6 @@ import argparse
 import math
 import random
 import numpy as np
-
 import gym
 
 class RandomAgent():
@@ -38,15 +37,25 @@ class SimpleQLearningAgent():
 
         self.q_value_table = np.zeros(observation_bin_sizes + (2, ))
 
+    def rate_cal(self, episode, rate_decay, rate_max, rate_min):
+         rate = 1.0 - math.log10((episode + 1.0) / rate_decay)
+         return max(rate_min, min(rate_max, rate))
+
     def act(self, observation, episode):
-        exploration_rate = max(self.parameters['exploration_rate_min'], min(self.parameters['exploration_rate_max'], 1.0 - math.log10((episode + 1) / self.parameters['exploration_rate_decrease_rate'])))
+        rate_min = self.parameters['exploration_rate_min']
+        rate_max = self.parameters['exploration_rate_max']
+        rate_decay = self.parameters['exploration_rate_decrease_rate']
+        self.exploration_rate=self.rate_cal(episode, rate_decay, rate_max, rate_min)
 
         observation_bins = [int(np.digitize(observation_item, self.observation_bins[i])) if len(self.observation_bins[i]) > 0 else 0 for i, observation_item in enumerate(observation)]
 
-        return self.action_space.sample() if random.random() < exploration_rate else np.argmax(self.q_value_table[tuple(observation_bins)])
+        return self.action_space.sample() if random.random() < self.exploration_rate else np.argmax(self.q_value_table[tuple(observation_bins)])
 
     def train(self, old_observation, action, new_observation, reward, done, episode):
-        learning_rate = max(self.parameters['learning_rate_min'], min(self.parameters['learning_rate_max'], 1.0 - math.log10((episode + 1) / self.parameters['learning_rate_decrease_rate'])))
+        rate_min = self.parameters['learning_rate_min']
+        rate_max = self.parameters['learning_rate_max']
+        rate_decay = self.parameters['learning_rate_decrease_rate']
+        self.learning_rate=self.rate_cal(episode, rate_decay, rate_max, rate_min)
 
         old_observation_bins = [int(np.digitize(observation_item, self.observation_bins[i])) if len(self.observation_bins[i]) > 0 else 0 for i, observation_item in enumerate(old_observation)]
         new_observation_bins = [int(np.digitize(observation_item, self.observation_bins[i])) if len(self.observation_bins[i]) > 0 else 0 for i, observation_item in enumerate(new_observation)]
@@ -55,7 +64,7 @@ class SimpleQLearningAgent():
 
         sample = reward + self.parameters['discount'] * (np.max(self.q_value_table[tuple(new_observation_bins)]) if not done else 0)
 
-        new_q_value = (1 - learning_rate) * old_q_value + learning_rate * sample
+        new_q_value = (1 - self.learning_rate) * old_q_value + self.learning_rate * sample
 
         self.q_value_table[tuple(old_observation_bins)][action] = new_q_value
 
@@ -79,40 +88,21 @@ if __name__ == '__main__':
     parser.add_argument('--theta-dot-max', default=40, type=float, help='maximum of pole angular velocity domain')
     parser.add_argument('--episodes', default=1800, type=int, help='number of episodes')
     parser.add_argument('--ui', default=0, type=int, help='render the UI starting from the uith episode')
-
-    parser.add_argument('--random-agent', action='store_true', help='use the random agent')
-    parser.add_argument('--random-agent-episodes', default=10, type=int, help='number of episodes for the random agent')
+    parser.add_argument('--random', action = 'store_true')
+    parser.add_argument('--output-print', action = 'store_true')
 
     args = parser.parse_args()
-
+    if args.random:
+        args.exploration_rate_decrease_rate=random.randrange(1,150)*1.0
+        args.learning_rate_decrease_rate=random.randrange(1,150)*1.0
+        args.learning_rate_max=random.randrange(500,1000)/1000.0
+        args.learning_rate_min = random.randrange(1, 500) / 1000.0
+        args.exploration_rate_max = random.randrange(500, 1000) / 1000.0
+        args.exploration_rate_min = random.randrange(1, 500) / 1000.0
+    param={'learning':[args.learning_rate_max,args.learning_rate_min,args.learning_rate_decrease_rate],'exploration':[args.exploration_rate_max,args.exploration_rate_min,args.exploration_rate_decrease_rate]}
+    if args.random:
+        print('Param {}'.format(param))
     env = gym.make('CartPole-v0')
-
-    if args.random_agent:
-        randomAgent = RandomAgent(env.action_space)
-
-        episodes = args.random_agent_episodes
-        total_reward = 0
-        done = False
-
-        for i in range(episodes):
-            total_reward = 0
-
-            observation = env.reset()
-            if args.ui > 0 and i >= args.ui - 1:
-                env.render()
-
-            while True:
-                action = randomAgent.act(observation, total_reward, done)
-
-                observation, reward, done, _ = env.step(action)
-                if args.ui > 0 and i >= args.ui - 1:
-                    env.render()
-
-                total_reward += reward
-
-                if done:
-                    print 'Episode {}: {}'.format(str(i+1), total_reward)
-                    break
 
     random.seed()
 
@@ -124,7 +114,7 @@ if __name__ == '__main__':
 
     solved = 0
     solved_consecutive = 0
-
+    solved_max_consecutive=0
     for i in range(episodes):
         total_reward = 0
 
@@ -146,16 +136,31 @@ if __name__ == '__main__':
             total_reward += reward
 
             if done:
-                print 'Episode {}: {}'.format(i+1, total_reward)
-
+                if (args.output_print):
+                    print(
+                    'Episode {}: {}, ;Learn {}, Exp {}'.format(i + 1, total_reward, simpleQLearningAgent.learning_rate,
+                                                               simpleQLearningAgent.exploration_rate))
                 solved = solved + 1 if total_reward >= 195 else solved
                 solved_consecutive = solved_consecutive + 1 if total_reward >= 195 else 0
-
+                solved_max_consecutive = max(solved_max_consecutive, solved_consecutive)
                 break
 
         if solved_consecutive >= 100:
-            break
-
-    print 'Solved {} times, {} times consecutively'.format(solved, solved_consecutive)
-    if solved_consecutive >= 100:
-        print 'Problem solved'
+                break
+    if (args.output_print):
+        print("Solved: {}({})".format(solved, solved_max_consecutive))
+        if solved_consecutive >= 100:
+            print('Problem solved')
+    else:
+        if solved_consecutive >= 100:
+            file = open("sucess.txt", 'a')
+            output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
+            print(output)
+            file.write(output)
+            file.close()
+        else:
+            file = open("fail.txt", 'a')
+            output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
+            print(output)
+            file.write(output)
+            file.close()
