@@ -95,11 +95,13 @@ if __name__ == '__main__':
     if args.random:
         args.exploration_rate_decrease_rate=random.randrange(1,150)*1.0
         args.learning_rate_decrease_rate=random.randrange(1,150)*1.0
-        args.learning_rate_max=random.randrange(1,1000)/1000.0
-        args.learning_rate_min = random.randrange(1, 1000) / 1000.0
-        args.exploration_rate_max = random.randrange(1, 1000) / 1000.0
-        args.exploration_rate_max = random.randrange(1, 1000) / 1000.0
+        args.learning_rate_max=random.randrange(500,1000)/1000.0
+        args.learning_rate_min = random.randrange(1, 500) / 1000.0
+        args.exploration_rate_max = random.randrange(500, 1000) / 1000.0
+        args.exploration_rate_min = random.randrange(1, 500) / 1000.0
     param={'learning':[args.learning_rate_max,args.learning_rate_min,args.learning_rate_decrease_rate],'exploration':[args.exploration_rate_max,args.exploration_rate_min,args.exploration_rate_decrease_rate]}
+    if args.random:
+        print('Param {}'.format(param))
     env = gym.make('CartPole-v0')
 
     random.seed()
@@ -141,19 +143,23 @@ if __name__ == '__main__':
                 solved_max_consecutive = max(solved_max_consecutive,solved_consecutive)
                 break
 
-        if solved_max_consecutive >= 100:
+        if solved_consecutive >= 100:
             break
 
     if (args.output_print):
-        print('Solved {}, ({}),{}'.format(solved, solved_max_consecutive,param))
+        print("Solved: {}({})".format(solved,solved_max_consecutive))
         if solved_consecutive >= 100:
             print('Problem solved')
     else:
-        if solved_max_consecutive >= 100:
+        if solved_consecutive >= 100:
             file = open("fail.txt", 'a')
+            output = ("{}, {}\n".format(solved, param))
+            print(output)
+            file.write(output)
+            file.close()
         else:
             file = open("success.txt", 'a')
-        output = ("{}, {}\n".format(solved, param))
-        print(output)
-        file.write(output)
-        file.close()
+            output = ("{}, {}\n".format(solved, param))
+            print(output)
+            file.write(output)
+            file.close()
