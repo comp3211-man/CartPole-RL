@@ -136,30 +136,32 @@ if __name__ == '__main__':
             total_reward += reward
 
             if done:
-                if(args.output_print):
-                    print('Episode {}: {}, ;Learn {}, Exp {}'.format(i+1, total_reward,simpleQLearningAgent.learning_rate,simpleQLearningAgent.exploration_rate))
+                if (args.output_print):
+                    print(
+                    'Episode {}: {}, ;Learn {}, Exp {}'.format(i + 1, total_reward, simpleQLearningAgent.learning_rate,
+                                                               simpleQLearningAgent.exploration_rate))
                 solved = solved + 1 if total_reward >= 195 else solved
                 solved_consecutive = solved_consecutive + 1 if total_reward >= 195 else 0
-                solved_max_consecutive = max(solved_max_consecutive,solved_consecutive)
+                solved_max_consecutive = max(solved_max_consecutive, solved_consecutive)
                 break
 
         if solved_consecutive >= 100:
             break
 
-    if (args.output_print):
-        print("Solved: {}({})".format(solved,solved_max_consecutive))
-        if solved_consecutive >= 100:
-            print('Problem solved')
-    else:
-        if solved_consecutive >= 100:
-            file = open("fail.txt", 'a')
-            output = ("{}, {}\n".format(solved, param))
-            print(output)
-            file.write(output)
-            file.close()
+        if (args.output_print):
+            print("Solved: {}({})".format(solved, solved_max_consecutive))
+            if solved_consecutive >= 100:
+                print('Problem solved')
         else:
-            file = open("success.txt", 'a')
-            output = ("{}, {}\n".format(solved, param))
-            print(output)
-            file.write(output)
-            file.close()
+            if solved_consecutive >= 100:
+                file = open("sucess.txt", 'a')
+                output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
+                print(output)
+                file.write(output)
+                file.close()
+            else:
+                file = open("fail.txt", 'a')
+                output = ("{}({}), {}\n".format(solved, solved_max_consecutive, param))
+                print(output)
+                file.write(output)
+                file.close()
